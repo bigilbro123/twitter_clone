@@ -54,16 +54,27 @@ export const signup = async (req, res) => {
 
 export const login = async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { email, username, password } = req.body;
 
-        const user = await User.findOne({ username });
-        const isPass = await bcrypt.compare(password, user?.password || '')
-        if (!user || !isPass) {
-            return res.status(400).json({ error: "User or password is worng" })
+        console.log(req.body);
+
+        let user = await User.findOne({ username });
+
+        if (!user) {
+            user = await User.findOne({ email });
         }
-        generateTokenAndSetCookie(user._id, res);
-        res.status(200).json({
 
+
+        if (!user) {
+            return res.status(400).json({ error: "Username  is incorrect" });
+        } else if (!(await bcrypt.compare(password, user.password))) {
+            return res.status(400).json({ error: " password is incorrect" });
+        }
+
+        generateTokenAndSetCookie(user._id, res);
+
+
+        res.status(200).json({
             _id: user._id,
             fullName: user.fullName,
             username: user.username,
@@ -72,13 +83,11 @@ export const login = async (req, res) => {
             following: user.following,
             profileImg: user.profileimg,
             coverImg: user.coverImg
-
-        })
+        });
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ error: 'Server error' });
     }
-
 };
 
 export const logout = async (req, res) => {
