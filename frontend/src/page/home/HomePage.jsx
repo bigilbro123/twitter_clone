@@ -40,7 +40,7 @@ const HomePage = () => {
                 {<CreatePost />}
 
                 {/* POSTS */}
-                {<Posts />}
+                {<Posts feedType={feedType} />}
                 <>
                     {/* <div className="flex w-100 flex-col gap-4">
                         <div className="flex items-center gap-4">

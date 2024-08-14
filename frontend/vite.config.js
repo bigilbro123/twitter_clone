@@ -10,9 +10,11 @@ export default {
   server: {
     port: 3000,
     proxy: {
-      "/api": {
-        target: 'http://localhost:5000', changeOrigin: true,
-      }
+      '/api': {
+        target: 'http://localhost:5000', // Replace with your API server
+        changeOrigin: true,
+        secure: false,
+      },
     }
   },
 

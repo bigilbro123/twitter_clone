@@ -3,18 +3,54 @@ import { BiRepost } from "react-icons/bi";
 import { FaRegHeart } from "react-icons/fa";
 import { FaRegBookmark } from "react-icons/fa6";
 import { FaTrash } from "react-icons/fa";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import React from "react";
+import { Link } from "react-router-dom";
 
 const Post = ({ post }) => {
     const [comment, setComment] = useState("");
     const postOwner = post.user;
     const isLiked = false;
+    console.log(postOwner);
+    const [timeDifference, setTimeDifference] = useState('');
+
+    useEffect(() => {
+        const calculateTimeDifference = () => {
+            const currentTime = new Date();
+            const createdAtTime = new Date(postOwner.createdAt);
+
+            // Difference in milliseconds
+            const diffInMs = currentTime - createdAtTime;
+
+            // Convert to minutes, hours, days
+            const diffInMinutes = Math.floor(diffInMs / 1000 / 60);
+            const diffInHours = Math.floor(diffInMinutes / 60);
+            const diffInDays = Math.floor(diffInHours / 24);
+
+            let timeString;
+            if (diffInDays >= 1) {
+                const remainingHours = diffInHours % 24;
+                timeString = `${diffInDays} day${diffInDays > 1 ? 's' : ''} and ${remainingHours} hour${remainingHours > 1 ? 's' : ''} ago`;
+            } else if (diffInHours >= 1) {
+                const remainingMinutes = diffInMinutes % 60;
+                timeString = `${diffInHours} hour${diffInHours > 1 ? 's' : ''} and ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''} ago`;
+            } else {
+                timeString = `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+            }
+
+            setTimeDifference(timeString);
+        };
+
+        // Calculate difference immediately and every second
+        calculateTimeDifference();
+        const interval = setInterval(calculateTimeDifference, 1000);
+
+        return () => clearInterval(interval); // Cleanup on unmount
+    }, [postOwner.createdAt]);
 
     const isMyPost = true;
 
-    const formattedDate = "1h";
+    const formattedDate = timeDifference;
 
     const isCommenting = false;
 

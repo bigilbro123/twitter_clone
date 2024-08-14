@@ -262,9 +262,7 @@ export const GetAllfollowingPost = async (req, res) => {
             path: "comments.user",
             select: "-password"
         })
-        res.status(200).json({
-            followersPost: feedPosts
-        })
+        res.status(200).json(feedPosts)
 
     } catch (error) {
         res.status(404).json({ error: "Error" })

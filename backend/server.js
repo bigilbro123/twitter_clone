@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
-
+import cors from 'cors';
 import express from 'express';
 import authRoutes from './routes/auth.route.js';
 import userRoutes from './routes/user.routes.js';
@@ -24,6 +24,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
 app.get('/', (req, res) => {
     res.send('App is running');
