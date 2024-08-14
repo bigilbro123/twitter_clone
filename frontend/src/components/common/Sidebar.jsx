@@ -27,10 +27,14 @@ const Sidebar = () => {
             }
         },
         onSuccess: () => {
-            toast.success("Logout successfull")
+            toast.success("Logout successful");
             queryClient.invalidateQueries({ queryKey: ['authUser'] });
-            window.location.reload();
+
+            setTimeout(() => {
+                window.location.reload();
+            }, 1200); // Delay for 2000ms (2 seconds)
         },
+
         onError: (error) => {
             toast.error(error.message || "Logout failed");
         },
