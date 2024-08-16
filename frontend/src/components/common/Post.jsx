@@ -4,15 +4,18 @@ import { FaRegHeart, FaTrash, FaRegBookmark } from "react-icons/fa"; // All Fa i
 import { useState, useEffect } from "react";
 import LoadingSpinner from "./LoadingSpinner";
 import React from "react";
+import { IoIosHeart } from "react-icons/io";
+
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 
 const Post = ({ post }) => {
+    const { data: authUser } = useQuery({ queryKey: ["authUser"] })
     const [comment, setComment] = useState("");
     const postOwner = post.user;
-    const isLiked = false;
+    const isLiked = post.likes.includes(authUser._id);
     console.log(postOwner);
     const [timeDifference, setTimeDifference] = useState('');
 
@@ -50,7 +53,7 @@ const Post = ({ post }) => {
         return () => clearInterval(interval); // Cleanup on unmount
     }, [postOwner.createdAt]);
 
-    const { data: authUser } = useQuery({ queryKey: ["authUser"] })
+
     const queryClient = useQueryClient()
 
     const isMyPost = authUser._id === post.user._id;
@@ -66,7 +69,7 @@ const Post = ({ post }) => {
     const handlePostComment = (e) => {
         e.preventDefault();
     };
-    const { mutate: deletePost, isPending } = useMutation({
+    const { mutate: deletePost, isPending: isdeleting } = useMutation({
         mutationFn: async () => {
             try {
                 const res = await fetch(`/api/posts/${post._id}`, {
@@ -90,7 +93,44 @@ const Post = ({ post }) => {
             })
         }
     })
+
+    const { mutate: likePost, isPending: isLiking } = useMutation({
+        mutationFn: async () => {
+            try {
+                const res = await fetch(`/api/posts/like/${post._id}`, {
+                    method: "POST",
+                })
+                const data = await res.json();
+                if (!res.ok) {
+
+
+                    throw new Error(data.error || "something went wrong");
+
+                }
+                return data;
+            } catch (error) {
+                throw new Error(error)
+            }
+        },
+        onSuccess: (updatedLikes) => {
+            // toast.success("post liked successfully")
+            // queryClient.invalidateQueries({ queryKey: ["posts"] })
+            queryClient.setQueryData(['posts'], (oldData) => {
+                return oldData.map((p) => {
+                    if (p._id === post._id) {
+                        return { ...p, likes: updatedLikes }
+                    }
+                    return p;
+                })
+            })
+        },
+        onError: (error) => {
+            toast.error(error.message)
+        }
+    })
     const handleLikePost = () => {
+        if (isLiking) return;
+        likePost()
 
     };
 
@@ -114,10 +154,10 @@ const Post = ({ post }) => {
                         </span>
                         {isMyPost && (
                             <span className='flex justify-end flex-1'>
-                                {!isPending && (
+                                {!isdeleting && (
                                     <FaTrash className='cursor-pointer hover:text-red-600' onClick={handleDeletePost} />
                                 )}
-                                {isPending && (
+                                {isdeleting && (
                                     <LoadingSpinner size="sm" />
                                 )}
                             </span>
@@ -204,10 +244,11 @@ const Post = ({ post }) => {
                                 <span className='text-sm text-slate-500 group-hover:text-green-500'>0</span>
                             </div>
                             <div className='flex gap-1 items-center group cursor-pointer' onClick={handleLikePost}>
-                                {!isLiked && (
+                                {isLiking && <LoadingSpinner size="sm" />}
+                                {!isLiked && !isLiking && (
                                     <FaRegHeart className='w-4 h-4 cursor-pointer text-slate-500 group-hover:text-pink-500' />
                                 )}
-                                {isLiked && <FaRegHeart className='w-4 h-4 cursor-pointer text-pink-500 ' />}
+                                {isLiked && !isLiking && <IoIosHeart color="red" />}
 
                                 <span
                                     className={`text-sm text-slate-500 group-hover:text-pink-500 ${isLiked ? "text-pink-500" : ""
