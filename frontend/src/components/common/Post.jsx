@@ -6,17 +6,19 @@ import LoadingSpinner from "./LoadingSpinner";
 import React from "react";
 import { IoIosHeart } from "react-icons/io";
 
-import { Link } from "react-router-dom";
+import { json, Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 
 const Post = ({ post }) => {
+    console.log(post);
+
     const { data: authUser } = useQuery({ queryKey: ["authUser"] })
     const [comment, setComment] = useState("");
     const postOwner = post.user;
     const isLiked = post.likes.includes(authUser._id);
-    console.log(postOwner);
+    // console.log(postOwner);
     const [timeDifference, setTimeDifference] = useState('');
 
     useEffect(() => {
@@ -68,6 +70,8 @@ const Post = ({ post }) => {
 
     const handlePostComment = (e) => {
         e.preventDefault();
+        if (isCommenting) return;
+        comments()
     };
     const { mutate: deletePost, isPending: isdeleting } = useMutation({
         mutationFn: async () => {
@@ -134,6 +138,41 @@ const Post = ({ post }) => {
 
     };
 
+    const { mutate: comments, isPending: isCommentings } = useMutation({
+        mutationFn: async () => {
+
+
+            try {
+                const res = await fetch(`/api/posts/comment/${post._id}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ text: comment })
+
+                })
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || "something went wrong")
+                }
+                return data
+            } catch (error) {
+                throw new Error(error);
+
+
+            }
+        },
+        onSuccess: () => {
+            toast.success("Commenting successful");
+            setComment("");
+            queryClient.invalidateQueries({ queryKey: ['posts'] })
+        },
+
+        onError: () => {
+
+        }
+    })
+
     return (
         <>
             <div className='flex gap-2 items-start p-4 border-b border-gray-700'>
@@ -179,11 +218,23 @@ const Post = ({ post }) => {
                             <div
                                 className='flex gap-1 items-center cursor-pointer group'
                                 onClick={() => document.getElementById("comments_modal" + post._id).showModal()}
-                            >
-                                <FaRegComment className='w-4 h-4  text-slate-500 group-hover:text-sky-400' />
-                                <span className='text-sm text-slate-500 group-hover:text-sky-400'>
-                                    {post.comments.length}
-                                </span>
+                            >{post.comments.length > 0 ? (
+                                <>
+                                    <FaRegComment color="blue" className='w-4 h-4 text-slate-500 group-hover:text-sky-400' />
+                                    <span className='text-sm text-slate-500 group-hover:text-sky-400'>
+                                        {post.comments.length}
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    <FaRegComment className='w-4 h-4 text-slate-500 group-hover:text-sky-400' />
+                                    <span className='text-sm text-slate-500 group-hover:text-sky-400'>
+                                        0
+                                    </span>
+                                </>
+                            )}
+
+
                             </div>
                             {/* We're using Modal Component from DaisyUI */}
                             <dialog id={`comments_modal${post._id}`} className='modal border-none outline-none'>
@@ -204,10 +255,13 @@ const Post = ({ post }) => {
                                                         />
                                                     </div>
                                                 </div>
+
                                                 <div className='flex flex-col'>
                                                     <div className='flex items-center gap-1'>
                                                         <span className='font-bold'>{comment.user.fullName}</span>
                                                         <span className='text-gray-700 text-sm'>
+
+
                                                             @{comment.user.username}
                                                         </span>
                                                     </div>

@@ -93,35 +93,35 @@ export const commentOnPost = async (req, res) => {
 
     try {
         if (!text) {
-            return res.status(400).json({
-                error: "Comment text is required."
-            });
+            return res.status(400).json({ error: "Comment text is required." });
         }
 
         if (!postId) {
-            return res.status(400).json({
-                error: "Post ID is required."
-            });
+            return res.status(400).json({ error: "Post ID is required." });
         }
 
         const post = await Post.findById(postId);
         if (!post) {
-            return res.status(404).json({
-                error: "Post not found."
-            });
+            return res.status(404).json({ error: "Post not found." });
         }
 
         const comment = { user: userId, text };
         post.comments.push(comment);
         await post.save();
 
+        // Fetch the post again to populate the user field in the comments
+        const updatedPost = await Post.findById(postId).populate({
+            path: 'comments.user',
+            select: '-password'
+        });
+
         res.status(200).json({
             message: "Comment added successfully.",
-            post
+            post: updatedPost
         });
 
     } catch (error) {
-        console.log("Error in commentOnPost controller:", error);
+        console.error("Error in commentOnPost controller:", error);
         res.status(500).json({
             error: "Server error. Please try again later."
         });
@@ -182,7 +182,7 @@ export const likeUnlikePost = async (req, res) => {
 
 export const GetAllPost = async (req, res) => {
     try {
-        const posts = await Post.find().sort({ createdAt: -1 }).populate({ path: 'user', select: '-password  ' })
+        const posts = await Post.find().sort({ createdAt: -1 }).populate({ path: 'comments.user', select: '-password  ' }).populate({ path: 'user', select: '-password  ' })
 
         // If there are no posts, return an empty array
         if (posts.length === 0) {
