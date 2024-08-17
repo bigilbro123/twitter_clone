@@ -182,7 +182,7 @@ export const likeUnlikePost = async (req, res) => {
 
 export const GetAllPost = async (req, res) => {
     try {
-        const posts = await Post.find().sort({ createdAt: -1 }).populate({ path: 'comments.user', select: '-password  ' }).populate({ path: 'user', select: '-password  ' })
+        const posts = await Post.find().sort({ createdAt: -1 }).populate({ path: 'user', select: '-password  ' }).populate({ path: 'comments.user', select: '-password  ' })
 
         // If there are no posts, return an empty array
         if (posts.length === 0) {
@@ -211,10 +211,9 @@ export const GetAllLike = async (req, res) => {
             return res.status(404).json({ error: "User Not Found" })
         }
         const LikedPost = await Post.find({ _id: { $in: user.likedPosts } }).populate({ path: "user", select: "-password" }).populate({ path: "comments.user", select: "-password" })
-        res.status(200).json({
-            likedPosts: LikedPost,
-            user: user
-        })
+        res.status(200).json(
+            LikedPost
+        )
     } catch (error) {
         res.status(404).json({ error: "Error" })
 
@@ -284,9 +283,7 @@ export const GetUser = async (req, res) => {
         console.log(username);
 
         let user = await User.findOne({ username });
-        if (!user) {
-            user = await User.findOne({ email: username });
-        }
+
 
         if (!user) {
             return res.status(404).json({
@@ -297,14 +294,15 @@ export const GetUser = async (req, res) => {
         const posts = await Post.find({ user: user._id })
             .sort({ createdAt: -1 })
             .populate({
-                path: "comments.user",
+                path: "user",
                 select: "-password"
-            });
+            })
 
-        res.status(200).json({
-            user,
+        res.status(200).json(
+
             posts
-        });
+
+        );
     } catch (error) {
         res.status(500).json({
             error: "An error occurred while fetching the user data."
