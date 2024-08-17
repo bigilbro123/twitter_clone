@@ -1,37 +1,61 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
-
+import toast from "react-hot-toast";
 import { IoSettingsOutline } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
 import { FaHeart } from "react-icons/fa6";
-
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 const NotificationPage = () => {
-    const isLoading = false;
-    const notifications = [
-        {
-            _id: "1",
-            from: {
-                _id: "1",
-                username: "johndoe",
-                profileImg: "/avatars/boy2.png",
-            },
-            type: "follow",
-        },
-        {
-            _id: "2",
-            from: {
-                _id: "2",
-                username: "janedoe",
-                profileImg: "/avatars/girl1.png",
-            },
-            type: "like",
-        },
-    ];
 
-    const deleteNotifications = () => {
-        alert("All notifications deleted");
-    };
+    const { data: notifications, isLoading } = useQuery({
+        queryKey: ["notification"],
+        queryFn: async () => {
+            try {
+                const res = await fetch("/api/notification")
+                const data = await res.json()
+                if (!res.ok) {
+                    throw new Error(data.error || "something went wrong")
+
+                }
+                return data
+            } catch (error) {
+                throw new Error(error)
+            }
+        },
+
+
+    })
+    const queryClient = useQueryClient()
+
+    const { mutate: deleteNotifications } = useMutation({
+        mutationFn: async () => {
+            try {
+
+                const res = await fetch("/api/notification", {
+                    method: "DELETE",
+                })
+                const data = await res.json()
+                if (!res.ok) {
+                    throw new Error(data.error || "something went wrong")
+
+                }
+                return data
+            } catch (error) {
+                throw new Error(error);
+
+            }
+
+        }, onSuccess: () => {
+            toast.success("post deleted");
+            queryClient.invalidateQueries({
+                queryKey: ["notification"]
+            })
+
+        }, onError: (error) => {
+            toast.error(error.message)
+        }
+    })
 
     return (
         <>
