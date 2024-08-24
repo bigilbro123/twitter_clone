@@ -9,12 +9,14 @@ export const getUserProfile = async (req, res) => {
     const { username } = req.params;
 
     try {
-        const user = await User.findOne({ username }).select('-password');
+        const user = await User.findOne({ username })
         if (!user) {
             return res.status(401).json({
                 error: "user not found"
             })
         }
+        console.log(user);
+
         res.status(200).json(user)
 
     } catch (error) {
@@ -104,23 +106,17 @@ export const getSuggestedUser = async (req, res) => {
 }
 
 export const updateUser = async (req, res) => {
-    console.log(req.user);
-    console.log(req.cookies.jwt);
-
     const { fullName, email, username, currentPassword, newPassword, bio, link } = req.body;
     let { profileImg, coverImg } = req.body;
     const userId = req.user._id;
 
     try {
-        console.log("User ID:", userId); // Debugging line
-
         let user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({
-                message: "User not found"
-            });
+            return res.status(404).json({ message: "User not found" });
         }
 
+        // Password handling
         if ((currentPassword && !newPassword) || (!currentPassword && newPassword)) {
             return res.status(400).json({ error: "Please provide both current and new password" });
         }
@@ -138,6 +134,7 @@ export const updateUser = async (req, res) => {
             user.password = await bcrypt.hash(newPassword, salt);
         }
 
+        // Profile image handling
         if (profileImg) {
             if (user.profileimg) {
                 const publicId = user.profileimg.split('/').pop().split('.')[0];
@@ -147,6 +144,7 @@ export const updateUser = async (req, res) => {
             profileImg = uploadedProfileImg.secure_url;
         }
 
+        // Cover image handling
         if (coverImg) {
             if (user.coverImg) {
                 const publicId = user.coverImg.split('/').pop().split('.')[0];
@@ -156,6 +154,7 @@ export const updateUser = async (req, res) => {
             coverImg = uploadedCoverImg.secure_url;
         }
 
+        // Update user details
         user.fullName = fullName || user.fullName;
         user.email = email || user.email;
         user.username = username || user.username;
@@ -164,17 +163,12 @@ export const updateUser = async (req, res) => {
         user.profileimg = profileImg || user.profileimg;
         user.coverImg = coverImg || user.coverImg;
 
-        user = await user.save();
-        user.password = undefined; // Set password to undefined before sending the response
-        return res.status(200).json({
-            user
-        });
+        await user.save();
+        user.password = undefined; // Remove password before sending the response
 
-
+        return res.status(200).json({ user });
     } catch (error) {
-        console.error("Update Error:", error); // Debugging line
-        res.status(400).json({
-            error: "Error updating user"
-        });
+        console.error("Update Error:", error);
+        res.status(500).json({ error: "Error updating user" });
     }
 };

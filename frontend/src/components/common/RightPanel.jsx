@@ -18,6 +18,7 @@ const RightPanel = () => {
                 if (!res.ok) {
                     throw new Error(data.error || "something went wrong")
                 }
+                console.log({ "suggestedUser": data.profileimg });
                 return data;
             } catch (error) {
                 throw new Error(error)
@@ -27,7 +28,9 @@ const RightPanel = () => {
 
     const { follow, isPeding } = usefollow()
 
+
     if (suggestedUser?.lenght === 0) {
+
         return (
             <div className="md:w-64 w-0">
 
@@ -66,7 +69,7 @@ const RightPanel = () => {
                                 <div className='flex gap-2 items-center'>
                                     <div className='avatar'>
                                         <div className='w-8 rounded-full'>
-                                            <img src={user.profileImg || "/avatar-placeholder.png"} />
+                                            <img src={user?.profileImg || "/avatar-placeholder.png"} />
                                         </div>
                                     </div>
                                     <div className='flex flex-col xl:flex-row'>

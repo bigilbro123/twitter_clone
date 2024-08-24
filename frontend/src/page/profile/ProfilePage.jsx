@@ -11,20 +11,24 @@ import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
 import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import usefollow from "../../hooks/userFollow";
+import toast from "react-hot-toast";
 
 const ProfilePage = () => {
     const [coverImg, setCoverImg] = useState(null);
     const [profileImg, setProfileImg] = useState(null);
     const [feedType, setFeedType] = useState("posts");
-
+    const queryClient = useQueryClient()
     const coverImgRef = useRef(null);
     const profileImgRef = useRef(null);
     const { username } = useParams();
 
+    const { data: authUser } = useQuery({ queryKey: ["authUser"] })
+    const { follow, ispending } = usefollow()
 
-    const isMyProfile = true;
+
     const { data: user, isLoading, refetch, isRefetching } = useQuery({
         queryKey: ["userprofile"],
         queryFn: async () => {
@@ -42,7 +46,47 @@ const ProfilePage = () => {
             }
         }
     })
+    const AmIFollowing
+        = authUser?.following?.includes(user?._id);
 
+
+    const { mutate: updateProfile, ispending: isupdatingProfile } = useMutation({
+        mutationFn: async () => {
+            try {
+                const res = await fetch(`/api/users/update`, {
+                    method: "POST",
+                    headers: {
+                        "Content-type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        coverImg,
+                        profileImg
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || "something went wrong");
+                }
+                return data;
+            } catch (error) {
+                throw new Error(error.message);
+            }
+        },
+        onSuccess: () => {
+            toast.success("Profile updated");
+            Promise.all([
+                queryClient.invalidateQueries({ queryKey: ["authUser"] }),
+                queryClient.invalidateQueries({ queryKey: ["userProfile"] })
+            ]);
+        },
+        onError: () => {
+            toast.error("Error updating profile");
+        }
+    });
+
+
+    const isMyProfile = authUser._id === user?._id;
     const handleImgChange = (e, state) => {
         const file = e.target.files[0];
         if (file) {
@@ -60,6 +104,8 @@ const ProfilePage = () => {
     useEffect(() => {
         feedType
     }, [feedType])
+    console.log("fudh" + user);
+
     const dateString = user?.createdAt;
     const date = new Date(dateString);
 
@@ -69,6 +115,15 @@ const ProfilePage = () => {
 
     const formattedDate = `${day}-${month}-${year}`;
     console.log(formattedDate); // Output: "14-Aug-2024"
+
+
+    console.log("Cover Image URL:", user?.coverImg);
+    console.log("profile Image URL:", user?.profileImg);
+    console.log("Cover Image URL:", user?.fullName);
+    console.log("Cover Image URL:", user?.username);
+    console.log("Cover Image URL:", user?._id);
+    console.log("Cover Image URL:", user?.email);
+
 
     return (
         <>
@@ -92,6 +147,7 @@ const ProfilePage = () => {
                             <div className='relative group/cover'>
                                 <img
                                     src={coverImg || user?.coverImg || "/cover.png"}
+
                                     className='h-52 w-full object-cover'
                                     alt='cover image'
                                 />
@@ -121,7 +177,9 @@ const ProfilePage = () => {
                                 {/* USER AVATAR */}
                                 <div className='avatar absolute -bottom-16 left-4'>
                                     <div className='w-32 rounded-full relative group/avatar'>
-                                        <img src={profileImg || user?.profileImg || "/avatar-placeholder.png"} />
+                                        {/* {alert(user?.profileImg)}
+                                        {alert(user?.coverImg)} */}
+                                        <img src={profileImg || user?.profileimg || "/avatar-placeholder.png"} />
                                         <div className='absolute top-5 right-3 p-1 bg-primary rounded-full group-hover/avatar:opacity-100 opacity-0 cursor-pointer'>
                                             {isMyProfile && (
                                                 <MdEdit
@@ -138,17 +196,25 @@ const ProfilePage = () => {
                                 {!isMyProfile && (
                                     <button
                                         className='btn btn-outline rounded-full btn-sm'
-                                        onClick={() => alert("Followed successfully")}
+                                        onClick={() => follow(user?._id)}
                                     >
-                                        Follow
+                                        {ispending && "Loading..."}
+                                        {!ispending && AmIFollowing
+
+                                            && "Unfollow"}
+                                        {!ispending && !AmIFollowing
+
+                                            && "follow"}
                                     </button>
                                 )}
                                 {(coverImg || profileImg) && (
                                     <button
                                         className='btn btn-primary rounded-full btn-sm text-white px-4 ml-2'
-                                        onClick={() => alert("Profile updated successfully")}
+                                        onClick={() => updateProfile()}
+
                                     >
-                                        Update
+                                        {isupdatingProfile ? "updating" : "Update"}
+
                                     </button>
                                 )}
                             </div>
