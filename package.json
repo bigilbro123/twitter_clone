@@ -5,9 +5,9 @@
   "main": "backend/server.js",
   "scripts": {
     "dev": "NODE_ENV=development nodemon backend/server.js",
-    "start": " NODE_ENV=production node backend/server.js",
+    "start": "NODE_ENV=production node backend/server.js",
     "frontend": "cd frontend && npm start",
-    "build": "cd frontend && npm install && npm run build"
+    "build": "npm install && npm install --prefix frontend && npm run build --prefix frontend"
   },
   "keywords": [
     "twitter",
@@ -30,7 +30,6 @@
     "mongoose": "^8.5.2"
   },
   "devDependencies": {
-    "cross-env": "^7.0.3",
     "gh-pages": "^6.1.1",
     "nodemon": "^3.1.4"
   },
@@ -42,4 +41,3 @@
     "node": ">=14.0.0"
   }
 }
-
