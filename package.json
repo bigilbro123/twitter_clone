@@ -4,8 +4,8 @@
   "description": "A Twitter clone built with Node.js, Express, and MongoDB.",
   "main": "backend/server.js",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development nodemon backend/server.js",
-    "start": "cross-env NODE_ENV=production node backend/server.js",
+    "dev": "NODE_ENV=development nodemon backend/server.js",
+    "start": " NODE_ENV=production node backend/server.js",
     "frontend": "cd frontend && npm start",
     "build": "cd frontend && npm install && npm run build"
   },
