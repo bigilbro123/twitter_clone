@@ -4,9 +4,10 @@
   "description": "A Twitter clone built with Node.js, Express, and MongoDB.",
   "main": "backend/server.js",
   "scripts": {
-    "dev": "nodemon backend/server.js",
-    "start": "node backend/server.js",
-    "frontend": "cd frontend && npm start"
+    "dev": "cross-env NODE_ENV=development nodemon backend/server.js",
+    "start": "cross-env NODE_ENV=production node backend/server.js",
+    "frontend": "cd frontend && npm start",
+    "build": "cd frontend && npm install && npm run build"
   },
   "keywords": [
     "twitter",
@@ -29,6 +30,7 @@
     "mongoose": "^8.5.2"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "gh-pages": "^6.1.1",
     "nodemon": "^3.1.4"
   },
@@ -40,3 +42,4 @@
     "node": ">=14.0.0"
   }
 }
+
