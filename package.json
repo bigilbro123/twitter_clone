@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "A Twitter clone built with Node.js, Express, and MongoDB.",
   "main": "backend/server.js",
-  "scripts": {
-    "dev": "NODE_ENV=development nodemon backend/server.js",
-    "start": "NODE_ENV=production node backend/server.js",
-    "frontend": "cd frontend && npm start",
-    "build": "npm install && npm install --prefix frontend && npm run build --prefix frontend"
+ "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
   "keywords": [
     "twitter",
